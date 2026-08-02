@@ -1,6 +1,7 @@
 import pypdf as pdf
 import docx as docx
 import streamlit as st
+import re
 
 def read_resume(resume):
     if resume is None:
@@ -30,7 +31,21 @@ def clean_resume(resume: str) -> str:
     if resume is None:
         st.warning("Please upload a resume file.")
     else:
-        # remove personal details, and other contact information from the resume text
+        # 1. remove urls -- they break tokenizers
+        resume = re.sub(r'http[s]?://\S+','', resume)
+        resume = re.sub(r'www\.\S+', '', resume)
+
+        #2. replace common bullet symbols with astandard space
+
+        resume = re.sub(r'[\u2022\u2023\u25E6\u2043\u2219\uf0b7\uf0d8\uf0a7]',' ', resume)
+
+        #3. remove any excessive tabs
+        resume = re.sub(r'\t+',' ', resume)
+
+        #4. remove speciall characters (excluding punctuations (,)./-, as they are needed for NLP)
+        resume = re.sub(r'[^a-zA-Z0-9\s,\.\/\-]',' ', resume)
+
+        return resume
 
 def analyse_resume(processeed_resume, processed_job_desc):
     pass
